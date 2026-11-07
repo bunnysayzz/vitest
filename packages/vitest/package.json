@@ -204,7 +204,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn": "8.11.3",
+    "acorn": "8.15.0",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",

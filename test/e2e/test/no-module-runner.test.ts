@@ -570,6 +570,49 @@ test('add', async () => {
     `)
   })
 
+  // fix https://github.com/vitest-dev/vitest/issues/11897
+  test('vi.mock applies in files using `using` or import attributes', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'math.ts': /* ts */ `
+export function add(a: number, b: number): number {
+  return a + b
+}
+    `,
+      'data.json': `{"name": "repro"}`,
+      'using.test.ts': /* ts */ `
+import { expect, test, vi } from 'vitest'
+import { add } from './math.ts'
+vi.mock('./math.ts', () => ({ add: () => 42 }))
+test('vi.mock applies in a file that uses \`using\`', () => {
+  using spy = vi.fn()
+  spy()
+  expect(add(1, 2)).toBe(42)
+})
+    `,
+      'import-attributes.test.ts': /* ts */ `
+import { expect, test, vi } from 'vitest'
+import data from './data.json' with { type: 'json' }
+import { add } from './math.ts'
+vi.mock('./math.ts', () => ({ add: () => 42 }))
+test('a JSON import keeps its import attributes in a file with vi.mock', () => {
+  expect(data.name).toBe('repro')
+  expect(add(1, 2)).toBe(42)
+})
+    `,
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "import-attributes.test.ts": {
+          "a JSON import keeps its import attributes in a file with vi.mock": "passed",
+        },
+        "using.test.ts": {
+          "vi.mock applies in a file that uses \`using\`": "passed",
+        },
+      }
+    `)
+  })
+
   test('manual mock keeps names re-exported with export *', async () => {
     const { stderr, testTree } = await runNoViteModuleRunnerTests({
       'base.js': `export function fromBase() { return 'base' }`,

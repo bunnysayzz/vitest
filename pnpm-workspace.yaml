@@ -35,14 +35,14 @@ overrides:
   '@vitest/browser-playwright': workspace:*
   '@vitest/browser-preview': workspace:*
   '@vitest/ui': workspace:*
-  acorn: 8.11.3
+  acorn: 8.15.0
   mlly: ^1.8.2
   rollup: 'catalog:'
   vite: 'catalog:'
   vitest: workspace:*
 patchedDependencies:
   '@sinonjs/fake-timers@15.4.0': patches/@sinonjs__fake-timers@15.4.0.patch
-  acorn@8.11.3: patches/acorn@8.11.3.patch
+  acorn@8.15.0: patches/acorn@8.15.0.patch
   cac@6.7.14: patches/cac@6.7.14.patch
   rrweb-snapshot@2.1.1: patches/rrweb-snapshot@2.1.1.patch
 catalog:

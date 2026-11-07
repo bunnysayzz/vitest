@@ -83,6 +83,28 @@ function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
 }
 
+// `import data from './data.json' with { type: 'json' }` must keep its
+// attributes when the import is rewritten as a dynamic import, otherwise
+// the native loader rejects the module.
+function getImportAttributesOption(node: ImportDeclaration): string {
+  const attributes = (
+    node as ImportDeclaration & {
+      attributes?: Array<{
+        key: Identifier | { value: string | number }
+        value: { value: string | number | boolean | null }
+      }>
+    }
+  ).attributes
+  if (!attributes?.length) {
+    return ''
+  }
+  const entries = attributes.map((attr) => {
+    const key = 'name' in attr.key ? attr.key.name : attr.key.value
+    return `${JSON.stringify(key)}: ${JSON.stringify(attr.value.value)}`
+  })
+  return `, { with: { ${entries.join(', ')} } }`
+}
+
 function getNodeTail(code: string, node: Node) {
   let end = node.end
   if (code[node.end] === ';') {
@@ -600,11 +622,12 @@ export function hoistMocks(
     const source = importNode.source.value as string
 
     const sourceString = JSON.stringify(source)
+    const attributesOption = getImportAttributesOption(importNode)
     let importLine = `const ${importId} = await `
     if (options.globalThisAccessor) {
-      importLine += `globalThis[${options.globalThisAccessor}].wrapDynamicImport(() => import(${sourceString}));\n`
+      importLine += `globalThis[${options.globalThisAccessor}].wrapDynamicImport(() => import(${sourceString}${attributesOption}));\n`
     } else {
-      importLine += `import(${sourceString});\n`
+      importLine += `import(${sourceString}${attributesOption});\n`
     }
 
     const exportedBindings = importNode.specifiers
